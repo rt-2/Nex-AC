@@ -820,6 +820,7 @@ enum acInfo
 	acParachute,
 	acIntRet,
 	acKicked,
+	acTimer_ltc,
 	acIp[16],
 	acSet[13],
 	acGtc[20],
@@ -1898,6 +1899,12 @@ ac_fpublic ac_AntiCheatGetVehicleInterior(vehicleid) return ACVehInfo[vehicleid]
 ac_fpublic ac_AntiCheatGetVehiclePaintjob(vehicleid) return ACVehInfo[vehicleid][acPaintJob];
 
 ac_fpublic ac_AntiCheatGetInterior(playerid) return ACInfo[playerid][acInt];
+
+forward GetAcTimerLastTickDiff(playerid);
+public GetAcTimerLastTickDiff(playerid)
+{
+	return GetTickCount() - ACInfo[playerid][acTimer_ltc];
+}
 
 #endif
 
@@ -4253,6 +4260,7 @@ public OnPlayerUpdate(playerid)
 					ACInfo[playerid][acSet][1] = -1;
 					ACInfo[playerid][acDmgRes] = 0;
 				}
+				#if !defined _INC_WEAPON_CONFIG
 				else if(ac_gtc > ACInfo[playerid][acGtc][3] + ac_gpp)
 				{
 					if(ACInfo[playerid][acACAllow][52] && ACInfo[playerid][acNOPAllow][3])
@@ -4277,6 +4285,7 @@ public OnPlayerUpdate(playerid)
 					}
 					else if(++ACInfo[playerid][acNOPCount][3] > AC_MAX_NOP_WARNINGS) ACInfo[playerid][acSet][1] = -1;
 				}
+				#endif
 			}
 			else if(ACInfo[playerid][acACAllow][12])
 			{
@@ -5706,12 +5715,14 @@ public OnPlayerExitVehicle(playerid, vehicleid)
 	{
 		if(!(0 <= playerid < MAX_PLAYERS) || ACInfo[playerid][acKicked] > 0) return 0;
 		new ac_i = GetTickCount();
+		/*
 		if(ACInfo[playerid][acACAllow][49])
 		{
 			if(ac_i < ACInfo[playerid][acCall][8] + ac_Mtfc[8][0]) ac_FloodDetect(playerid, 8);
 			else if(ac_i < ACInfo[playerid][acCall][27] + ac_Mtfc[27][0]) ac_FloodDetect(playerid, 27);
 			else ACInfo[playerid][acFloodCount][8] = ACInfo[playerid][acFloodCount][27] = 0;
 		}
+		*/
 		if(ACInfo[playerid][acACAllow][6])
 		{
 			new Float:ac_x, Float:ac_y, Float:ac_z, Float:ac_dist, Float:ac_dist_set;
@@ -5791,12 +5802,14 @@ public OnPlayerPickUpPickup(playerid, pickupid)
 		{
 	#endif
 		new ac_i = GetTickCount();
+		/*
 		if(ACInfo[playerid][acACAllow][49])
 		{
 			if(ac_i < ACInfo[playerid][acCall][8] + ac_Mtfc[8][0]) ac_FloodDetect(playerid, 8);
 			else if(ac_i < ACInfo[playerid][acCall][27] + ac_Mtfc[27][0]) ac_FloodDetect(playerid, 27);
 			else ACInfo[playerid][acFloodCount][8] = ACInfo[playerid][acFloodCount][27] = 0;
 		}
+		*/
 		if(ACInfo[playerid][acACAllow][6])
 		{
 			#if defined VectorSize
@@ -8230,6 +8243,7 @@ ac_fpublic ac_Timer(playerid)
 	{
 		ACInfo[playerid][acTimerTick] = ac_gtc;
 		ACInfo[playerid][acTimerID] = SetTimerEx("ac_Timer", 1000, false, "i", playerid);
+		ACInfo[playerid][acTimer_ltc] = GetTickCount();
 	}
 	return 1;
 }
@@ -8621,9 +8635,9 @@ static ac_KickWithCode(playerid, ip_address[], type, code, code2 = 0)
 		else printf(SUSPICION_1, playerid, code, ac_strtmp);
 	#endif
 	#if defined OnCheatDetected
-		OnCheatDetected(playerid, ip_address, type, code);
+		OnCheatDetected(playerid, ip_address, type, code, code2);
 	#else
-		ac_OnCheatDetected(playerid, ip_address, type, code);
+		ac_OnCheatDetected(playerid, ip_address, type, code, code2);
 	#endif
 	return 0;
 }
